@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Floor Plan Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .header {
+            background: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+        .sidebar {
+            width: 320px;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .canvas-area {
+            flex: 1;
+            background: #e0e0e0;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas {
+            cursor: crosshair;
+            display: block;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .section h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .mode-buttons button {
+            flex: 1;
+            background: #e0e0e0;
+            color: #333;
+        }
+        .mode-buttons button.active {
+            background: #2196F3;
+            color: white;
+        }
+        #uploadArea {
+            border: 2px dashed #2196F3;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        #uploadArea:hover {
+            background: #e3f2fd;
+            border-color: #1976D2;
+        }
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .node-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .node-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .node-item strong {
+            color: #2196F3;
+        }
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .stat-box {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #2196F3;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗺️ Indoor Navigation - Floor Plan Editor</h1>
+        <p>Visual editor for building your indoor navigation system</p>
+    </div>
+    
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="nodeCount">0</div>
+                    <div class="stat-label">Locations</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="edgeCount">0</div>
+                    <div class="stat-label">Paths</div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <strong>📋 Quick Guide:</strong>
+                <ol>
+                    <li>Upload your floor plan image</li>
+                    <li>Set scale by clicking 2 points</li>
+                    <li>Add rooms by clicking locations</li>
+                    <li>Connect rooms to create paths</li>
+                    <li>Save and test!</li>
+                </ol>
+            </div>
+            
+            <!-- Upload Section -->
+            <div class="section">
+                <h3>1️⃣ Upload Floor Plan</h3>
+                <div id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <p style="font-size: 40px; margin: 10px 0;">📄</p>
+                    <p><strong>Click to upload</strong></p>
+                    <small>PNG, JPG, JPEG supported</small>
+                </div>
+                <input type="file" id="fileInput" accept=".png,.jpg,.jpeg" style="display:none;">
+            </div>
+            
+            <!-- Scale Section -->
+            <div class="section">
+                <h3>2️⃣ Set Scale</h3>
+                <div class="info-box">
+                    💡 Click two points on your floor plan that you know the distance between (e.g., a wall that's 10 meters long)
+                </div>
+                <input type="number" id="knownDistance" placeholder="Actual distance (meters)" value="10">
+                <button class="btn-secondary" onclick="setScale()">Set Scale</button>
+                <div id="scaleStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+            
+            <!-- Mode Section -->
+            <div class="section">
+                <h3>3️⃣ Select Mode</h3>
+                <div class="mode-buttons">
+                    <button id="nodeModeBtn" class="active" onclick="setMode('node')">
+                        ➕ Add Rooms
+                    </button>
+                    <button id="edgeModeBtn" onclick="setMode('edge')">
+                        🔗 Connect
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Node Details Section -->
+            <div class="section" id="nodeSection">
+                <h3>4️⃣ Room Details</h3>
+                <input type="text" id="nodeName" placeholder="Room name (e.g., Room 101)">
+                <select id="nodeType">
+                    <option value="room">🚪 Room</option>
+                    <option value="landmark">📍 Landmark</option>
+                    <option value="hallway">🚶 Hallway</option>
+                    <option value="stairs">🪜 Stairs</option>
+                    <option value="elevator">🛗 Elevator</option>
+                </select>
+                <input type="number" id="nodeFloor" placeholder="Floor number" value="1">
+                <div class="info-box">
+                    After filling details, click on the floor plan to place the room
+                </div>
+            </div>
+            
+            <!-- Edge Section -->
+            <div class="section" id="edgeSection" style="display:none;">
+                <h3>4️⃣ Connect Rooms</h3>
+                <div class="info-box">
+                    Click two rooms to connect them. Distance will be calculated automatically based on your scale.
+                </div>
+                <div id="connectionStatus" style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px; font-size: 13px;">
+                    Click first room...
+                </div>
+            </div>
+            
+            <!-- Nodes List -->
+            <div class="section">
+                <h3>📋 All Locations</h3>
+                <div class="node-list" id="nodesList">
+                    <p style="text-align: center; color: #999; padding: 20px;">No locations added yet</p>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="section">
+                <button class="btn-primary" onclick="saveData()">💾 Save All Data</button>
+                <button class="btn-warning" onclick="window.open('index.html', '_blank')">👁️ View User Page</button>
+                <button class="btn-danger" onclick="clearAll()">🗑️ Clear Everything</button>
+            </div>
+        </div>
+        
+        <!-- Canvas Area -->
+        <div class="canvas-area" id="canvasArea">
+            <canvas id="floorPlanCanvas"></canvas>
+        </div>
+    </div>
+
+    <script src="floor-plan-editor.js"></script>
+</body>
+</html>
