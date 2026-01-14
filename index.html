@@ -25,6 +25,8 @@
             max-width: 500px;
             width: 100%;
             padding: 30px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         h1 {
             color: #667eea;
@@ -71,6 +73,12 @@
         button.secondary:hover {
             background: #7f8c8d;
         }
+        button.success {
+            background: #4CAF50;
+        }
+        button.success:hover {
+            background: #45a049;
+        }
         input {
             width: 100%;
             padding: 15px;
@@ -110,16 +118,134 @@
             font-size: 30px;
             margin-bottom: 10px;
         }
+        
+        /* Compact Route Steps */
         .route-step {
+            background: white;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .route-step:hover {
             background: #f8f9fa;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
+            border-color: #667eea;
         }
-        .route-step strong {
-            color: #667eea;
+        .route-step.active {
+            background: #e3f2fd;
+            border: 2px solid #2196F3;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.2);
         }
+        .route-step.completed {
+            background: #f1f8f4;
+            border-color: #4CAF50;
+            opacity: 0.85;
+        }
+        
+        /* Custom Checkbox */
+        .step-checkbox {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .route-step.active .step-checkbox {
+            border-color: #2196F3;
+        }
+        .route-step.completed .step-checkbox {
+            background: #4CAF50;
+            border-color: #4CAF50;
+        }
+        .step-checkbox-icon {
+            color: white;
+            font-size: 14px;
+            display: none;
+        }
+        .route-step.completed .step-checkbox-icon {
+            display: block;
+        }
+        
+        /* Step Number Badge */
+        .step-number {
+            background: #e0e0e0;
+            color: #666;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .route-step.active .step-number {
+            background: #2196F3;
+            color: white;
+        }
+        .route-step.completed .step-number {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        /* Direction Icon - Small */
+        .direction-icon {
+            font-size: 20px;
+            min-width: 20px;
+        }
+        
+        /* Step Content */
+        .step-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .step-instruction {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .route-step.completed .step-instruction {
+            color: #4CAF50;
+        }
+        .step-details {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .route-step.completed .step-details {
+            text-decoration: line-through;
+        }
+        
+        /* Distance Badge - Small */
+        .step-distance {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .route-step.active .step-distance {
+            background: #2196F3;
+        }
+        .route-step.completed .step-distance {
+            background: #4CAF50;
+        }
+        
         .total-distance {
             background: #667eea;
             color: white;
@@ -130,6 +256,63 @@
             font-size: 20px;
             font-weight: bold;
         }
+        .progress-bar {
+            background: rgba(255,255,255,0.3);
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: white;
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        .progress-text {
+            font-size: 14px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+        
+        .route-header {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .route-header h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        .route-locations {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .arrival-celebration {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .arrival-celebration h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .celebration-icon {
+            font-size: 60px;
+            margin: 20px 0;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -139,17 +322,15 @@
             font-size: 60px;
             margin-bottom: 20px;
         }
-        .step-number {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 30px;
-            margin-right: 10px;
-            font-weight: bold;
+        
+        .tip-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #856404;
         }
     </style>
 </head>
@@ -192,6 +373,9 @@
         let nodes = [];
         let edges = [];
         let currentLocation = null;
+        let currentStep = 0;
+        let routeSteps = [];
+        let destinationNode = null;
 
         // Load data
         window.onload = function() {
@@ -213,6 +397,8 @@
             hideAllScreens();
             document.getElementById('start-screen').classList.add('active');
             currentLocation = null;
+            currentStep = 0;
+            routeSteps = [];
         }
 
         function showLandmarks() {
@@ -235,6 +421,8 @@
         function showNavigation(destination) {
             hideAllScreens();
             document.getElementById('navigation-screen').classList.add('active');
+            destinationNode = nodes.find(n => n.id === destination);
+            currentStep = 0;
             calculateAndShowRoute(destination);
         }
 
@@ -242,16 +430,19 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         }
 
-        // Render landmarks
+        // Render landmarks (excluding hallways)
         function renderLandmarks() {
             const container = document.getElementById('landmark-list');
-            const landmarks = nodes.filter(n => n.type === 'landmark' || n.type === 'hallway');
+            const landmarks = nodes.filter(n => 
+                n.type === 'landmark' || n.type === 'stairs' || n.type === 'elevator'
+            );
             
             if (landmarks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state" style="grid-column: 1 / -1;">
                         <div class="empty-state-icon">📍</div>
                         <p>No landmarks available</p>
+                        <small style="display: block; margin-top: 10px;">Add landmarks in the admin panel</small>
                     </div>
                 `;
                 return;
@@ -259,7 +450,6 @@
 
             const icons = {
                 'landmark': '📍',
-                'hallway': '🚶',
                 'stairs': '🪜',
                 'elevator': '🛗'
             };
@@ -273,10 +463,13 @@
             `).join('');
         }
 
-        // Render rooms
+        // Render rooms (excluding hallways)
         function renderRooms(filter = '') {
             const container = document.getElementById('room-list');
-            let rooms = nodes.filter(n => currentLocation.id !== n.id);
+            let rooms = nodes.filter(n => 
+                currentLocation.id !== n.id && 
+                n.type !== 'hallway'  // Exclude hallways from destinations
+            );
             
             if (filter) {
                 rooms = rooms.filter(n => 
@@ -297,7 +490,6 @@
             const icons = {
                 'room': '🚪',
                 'landmark': '📍',
-                'hallway': '🚶',
                 'stairs': '🪜',
                 'elevator': '🛗'
             };
@@ -319,6 +511,26 @@
         function selectLocation(nodeId) {
             currentLocation = nodes.find(n => n.id === nodeId);
             showDestinations();
+        }
+
+        // Calculate direction between two points
+        function getDirection(from, to) {
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            // Normalize angle to 0-360
+            const normalizedAngle = (angle + 360) % 360;
+            
+            if (normalizedAngle >= 315 || normalizedAngle < 45) {
+                return { text: 'Turn Right', icon: '→', detail: 'Head to your right' };
+            } else if (normalizedAngle >= 45 && normalizedAngle < 135) {
+                return { text: 'Go Straight', icon: '↓', detail: 'Continue forward' };
+            } else if (normalizedAngle >= 135 && normalizedAngle < 225) {
+                return { text: 'Turn Left', icon: '←', detail: 'Head to your left' };
+            } else {
+                return { text: 'Go Back', icon: '↑', detail: 'Head backward' };
+            }
         }
 
         // Dijkstra's algorithm for pathfinding
@@ -379,6 +591,45 @@
             return { path, distance: distances[endId] };
         }
 
+        // Find nearest room/landmark to a given node
+        function findNearestLandmark(node) {
+            let nearest = null;
+            let minDistance = Infinity;
+            
+            // Look for connected rooms or landmarks
+            const connectedNodes = edges
+                .filter(e => e.from === node.id || e.to === node.id)
+                .map(e => {
+                    const otherId = e.from === node.id ? e.to : e.from;
+                    return nodes.find(n => n.id === otherId);
+                })
+                .filter(n => n && (n.type === 'room' || n.type === 'landmark'));
+            
+            if (connectedNodes.length > 0) {
+                // Prefer rooms over landmarks
+                const rooms = connectedNodes.filter(n => n.type === 'room');
+                if (rooms.length > 0) {
+                    return rooms[0];
+                }
+                return connectedNodes[0];
+            }
+            
+            // If no connected rooms, find closest room by pixel distance
+            nodes.forEach(n => {
+                if ((n.type === 'room' || n.type === 'landmark') && n.id !== node.id) {
+                    const distance = Math.sqrt(
+                        Math.pow(n.x - node.x, 2) + Math.pow(n.y - node.y, 2)
+                    );
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearest = n;
+                    }
+                }
+            });
+            
+            return nearest;
+        }
+
         function calculateAndShowRoute(destinationId) {
             const result = findShortestPath(currentLocation.id, destinationId);
             const container = document.getElementById('route-info');
@@ -395,15 +646,8 @@
 
             const destination = nodes.find(n => n.id === destinationId);
             
-            let html = `
-                <div class="total-distance">
-                    📏 Total Distance: ${result.distance} meters
-                </div>
-                <p style="text-align: center; margin-bottom: 20px; color: #666;">
-                    From <strong>${currentLocation.name}</strong> to <strong>${destination.name}</strong>
-                </p>
-            `;
-
+            // Build route steps
+            routeSteps = [];
             for (let i = 0; i < result.path.length - 1; i++) {
                 const fromNode = nodes.find(n => n.id === result.path[i]);
                 const toNode = nodes.find(n => n.id === result.path[i + 1]);
@@ -412,33 +656,118 @@
                     (e.to === fromNode.id && e.from === toNode.id)
                 );
 
-                const icons = {
-                    'room': '🚪',
-                    'landmark': '📍',
-                    'hallway': '🚶',
-                    'stairs': '🪜',
-                    'elevator': '🛗'
-                };
-
-                html += `
-                    <div class="route-step">
-                        <span class="step-number">${i + 1}</span>
-                        <strong>Go to ${icons[toNode.type] || ''} ${toNode.name}</strong>
-                        <div style="margin-top: 5px; font-size: 14px; color: #666;">
-                            ${edge.distance} meters • Floor ${toNode.floor}
-                        </div>
-                    </div>
-                `;
+                const direction = getDirection(fromNode, toNode);
+                
+                // Find nearest landmark/room to the destination node
+                const nearestLandmark = findNearestLandmark(toNode);
+                
+                routeSteps.push({
+                    from: fromNode,
+                    to: toNode,
+                    distance: edge.distance,
+                    direction: direction,
+                    nearestLandmark: nearestLandmark,
+                    completed: false
+                });
             }
 
-            html += `
-                <div class="route-step" style="background: #d4edda; border-color: #28a745;">
-                    <span class="step-number" style="background: #28a745;">✓</span>
-                    <strong>You've arrived!</strong>
+            renderRoute(result.distance);
+        }
+
+        function renderRoute(totalDistance) {
+            const container = document.getElementById('route-info');
+            const progress = (currentStep / routeSteps.length) * 100;
+            
+            let html = `
+                <div class="total-distance">
+                    📏 ${totalDistance}m Total Distance
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="progress-text">
+                        ${currentStep} of ${routeSteps.length} completed
+                    </div>
+                </div>
+                
+                <div class="route-header">
+                    <h3>Navigation Steps</h3>
+                    <div class="route-locations">
+                        ${currentLocation.name} → ${destinationNode.name}
+                    </div>
                 </div>
             `;
 
+            // Check if completed
+            if (currentStep >= routeSteps.length) {
+                html += `
+                    <div class="arrival-celebration">
+                        <div class="celebration-icon">🎉</div>
+                        <h2>You've Arrived!</h2>
+                        <p style="font-size: 18px; margin-top: 10px;">
+                            Welcome to ${destinationNode.name}
+                        </p>
+                    </div>
+                `;
+                html += `
+                    <button class="success" onclick="showDestinations()">Navigate Somewhere Else</button>
+                `;
+            } else {
+                html += `<div class="tip-box">💡 Tap any step to mark it as completed</div>`;
+                
+                // Render compact steps
+                routeSteps.forEach((step, index) => {
+                    const isActive = index === currentStep;
+                    const isCompleted = index < currentStep;
+                    const icons = {
+                        'room': '🚪',
+                        'landmark': '📍',
+                        'hallway': '🚶',
+                        'stairs': '🪜',
+                        'elevator': '🛗'
+                    };
+
+                    html += `
+                        <div class="route-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+                             onclick="completeStep(${index})">
+                            <div class="step-checkbox">
+                                <span class="step-checkbox-icon">✓</span>
+                            </div>
+                            <div class="step-number">${index + 1}</div>
+                            <span class="direction-icon">${step.direction.icon}</span>
+                            <div class="step-content">
+                                <div class="step-instruction">${step.direction.text}</div>
+                                <div class="step-details">
+                                    to ${icons[step.to.type]} ${step.to.name}${step.to.floor !== step.from.floor ? ` (Floor ${step.to.floor})` : ''}
+                                    ${step.nearestLandmark ? `<br>📍 You'll be near ${icons[step.nearestLandmark.type]} <strong>${step.nearestLandmark.name}</strong>` : ''}
+                                </div>
+                            </div>
+                            <span class="step-distance">${step.distance}m</span>
+                        </div>
+                    `;
+                });
+            }
+
             container.innerHTML = html;
+        }
+
+        function completeStep(stepIndex) {
+            if (stepIndex === currentStep && currentStep < routeSteps.length) {
+                routeSteps[currentStep].completed = true;
+                currentStep++;
+                
+                // Get total distance
+                const totalDistance = routeSteps.reduce((sum, step) => sum + step.distance, 0);
+                
+                renderRoute(totalDistance);
+                
+                // Scroll to active step
+                setTimeout(() => {
+                    const activeStep = document.querySelector('.route-step.active');
+                    if (activeStep) {
+                        activeStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            }
         }
     </script>
 </body>
