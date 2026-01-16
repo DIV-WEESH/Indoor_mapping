@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Navigation System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 320px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .user-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .admin-btn {
+            background: #764ba2;
+            color: white;
+        }
+
+        /* Admin inner buttons */
+        .admin-options {
+            display: none;
+            margin-top: 15px;
+            animation: slideDown 0.3s ease;
+        }
+
+        .manual-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .ai-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Select Mode</h1>
+
+    <!-- User Section -->
+    <button id="userBtn" class="user-btn" onclick="goUser()">User</button>
+
+    <!-- Admin Section -->
+    <button class="admin-btn" onclick="showAdmin()">Admin</button>
+
+    <div id="adminOptions" class="admin-options">
+        <button class="manual-btn" onclick="goManual()">Manual</button>
+        <button class="ai-btn" onclick="goAI()">AI Based</button>
+    </div>
+</div>
+
+<script>
+    function goUser() {
+        window.location.href = "index.html";
+    }
+
+    function showAdmin() {
+        document.getElementById("userBtn").classList.add("hidden");
+        document.getElementById("adminOptions").style.display = "block";
+    }
+
+    function goManual() {
+        window.location.href = "admin_manual.html";
+    }
+
+    function goAI() {
+        window.location.href = "analyzer.html";
+    }
+</script>
+
+</body>
+</html>

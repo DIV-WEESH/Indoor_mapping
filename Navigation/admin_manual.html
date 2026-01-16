@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Floor Plan Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .header {
+            background: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+        .sidebar {
+            width: 340px;
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .canvas-area {
+            flex: 1;
+            background: #e0e0e0;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas {
+            cursor: crosshair;
+            display: block;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .section h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+        .btn-info {
+            background: #9C27B0;
+            color: white;
+        }
+        .mode-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .mode-buttons button {
+            background: #e0e0e0;
+            color: #333;
+            padding: 10px;
+            font-size: 13px;
+        }
+        .mode-buttons button.active {
+            background: #2196F3;
+            color: white;
+        }
+        #uploadArea {
+            border: 2px dashed #2196F3;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        #uploadArea:hover {
+            background: #e3f2fd;
+            border-color: #1976D2;
+        }
+        #loadDataArea {
+            border: 2px dashed #9C27B0;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        #loadDataArea:hover {
+            background: #f3e5f5;
+            border-color: #7B1FA2;
+        }
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .tip-box {
+            background: #e3f2fd;
+            border: 1px solid #2196F3;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .node-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .node-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .node-item strong {
+            color: #2196F3;
+        }
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .stat-box {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #2196F3;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .workflow-tip {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        .workflow-tip strong {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗺️ Indoor Navigation - Floor Plan Editor</h1>
+        <p>Build realistic navigation paths for your building</p>
+    </div>
+    
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="nodeCount">0</div>
+                    <div class="stat-label">Locations</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="edgeCount">0</div>
+                    <div class="stat-label">Paths</div>
+                </div>
+            </div>
+
+            <!-- Workflow Guide -->
+            <div class="workflow-tip">
+                <strong>💡 Recommended Workflow:</strong><br>
+                1. Add hallways/corridors first<br>
+                2. Add rooms along the hallways<br>
+                3. Connect rooms to nearby hallways<br>
+                4. Connect hallways together<br>
+                5. Add stairs/elevators between floors
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <strong>📋 Quick Guide:</strong>
+                <ol>
+                    <li>Upload your floor plan image</li>
+                    <li>Set scale by clicking 2 points</li>
+                    <li>Add hallways as your main paths</li>
+                    <li>Add rooms and connect to hallways</li>
+                    <li>Save and test!</li>
+                </ol>
+            </div>
+            
+            <!-- Upload Section -->
+            <div class="section">
+                <h3>1️⃣ Upload Floor Plan</h3>
+                <div id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <p style="font-size: 40px; margin: 10px 0;">📄</p>
+                    <p><strong>Click to upload</strong></p>
+                    <small>PNG, JPG, JPEG supported</small>
+                </div>
+                <input type="file" id="fileInput" accept=".png,.jpg,.jpeg" style="display:none;">
+            </div>
+
+            <!-- Load Data Section -->
+            <div class="section">
+                <h3>📂 Load Existing Data</h3>
+                <div id="loadDataArea" onclick="document.getElementById('jsonFileInput').click()">
+                    <p style="font-size: 30px; margin: 5px 0;">📥</p>
+                    <p><strong>Click to load JSON file</strong></p>
+                    <small>navigation_manual.json</small>
+                </div>
+                <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
+                <div class="info-box" style="margin-top: 10px;">
+                    💡 Load previously saved navigation data
+                </div>
+            </div>
+            
+            <!-- Scale Section -->
+            <div class="section">
+                <h3>2️⃣ Set Scale</h3>
+                <div class="info-box">
+                    💡 Click two points that you know the distance between
+                </div>
+                <input type="number" id="knownDistance" placeholder="Actual distance (meters)" value="10">
+                <button class="btn-secondary" onclick="setScale()">Set Scale</button>
+                <div id="scaleStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+            
+            <!-- Mode Section -->
+            <div class="section">
+                <h3>3️⃣ Select Mode</h3>
+                <div class="mode-buttons">
+                    <button id="hallwayModeBtn" class="active" onclick="setMode('hallway')">
+                        🚶 Hallway
+                    </button>
+                    <button id="roomModeBtn" onclick="setMode('room')">
+                        🚪 Room
+                    </button>
+                    <button id="landmarkModeBtn" onclick="setMode('landmark')">
+                        📍 Landmark
+                    </button>
+                    <button id="edgeModeBtn" onclick="setMode('edge')">
+                        🔗 Connect
+                    </button>
+                    <button id="deleteEdgeModeBtn" onclick="setMode('deleteEdge')">
+                        ✂️ Delete Link
+                    </button>
+                </div>
+                <div class="tip-box" style="margin-top: 10px;">
+                    <strong>Tip:</strong> Start with hallways, then add rooms, then connect them!
+                </div>
+            </div>
+            
+            <!-- Node Details Section -->
+            <div class="section" id="nodeSection">
+                <h3>4️⃣ Location Details</h3>
+                <input type="text" id="nodeName" placeholder="Name (e.g., Main Corridor, Room 101)">
+                <select id="nodeType">
+                    <option value="hallway">🚶 Hallway/Corridor</option>
+                    <option value="room">🚪 Room</option>
+                    <option value="landmark">📍 Landmark</option>
+                    <option value="stairs">🪜 Stairs</option>
+                    <option value="elevator">🛗 Elevator</option>
+                </select>
+                <input type="number" id="nodeFloor" placeholder="Floor number" value="1">
+                <div class="info-box">
+                    Click on the floor plan to place this location
+                </div>
+            </div>
+            
+            <!-- Edge Section -->
+            <div class="section" id="edgeSection" style="display:none;">
+                <h3>4️⃣ Connect Locations</h3>
+                <div class="tip-box">
+                    <strong>Best Practice:</strong><br>
+                    • Connect rooms to hallways<br>
+                    • Connect hallways to hallways<br>
+                    • Connect stairs/elevators to hallways
+                </div>
+                <div id="connectionStatus" style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px; font-size: 13px;">
+                    Click first location...
+                </div>
+            </div>
+
+            <!-- Delete Edge Section -->
+            <div class="section" id="deleteEdgeSection" style="display:none;">
+                <h3>4️⃣ Delete Link</h3>
+                <div class="tip-box">
+                    <strong>Instructions:</strong><br>
+                    Click on a link line to delete the connection between two locations
+                </div>
+                <div id="deleteEdgeStatus" style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px; font-size: 13px;">
+                    Hover over and click a link to delete it...
+                </div>
+            </div>
+            
+            <!-- Nodes List -->
+            <div class="section">
+                <h3>📋 All Locations</h3>
+                <div class="node-list" id="nodesList">
+                    <p style="text-align: center; color: #999; padding: 20px;">No locations added yet</p>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="section">
+                <button class="btn-primary" onclick="saveData()">💾 Download navigation_manual.json</button>
+                <button class="btn-warning" onclick="window.open('index.html', '_blank')">👁️ View User Page</button>
+                <button class="btn-danger" onclick="clearAll()">🗑️ Clear Everything</button>
+            </div>
+        </div>
+        
+        <!-- Canvas Area -->
+        <div class="canvas-area" id="canvasArea">
+            <canvas id="floorPlanCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        
+        let canvas, ctx;
+        let floorPlanImage = null;
+        let floorPlanImageData = null; // Store base64 image data
+        let nodes = [];
+        let edges = [];
+        let mode = 'hallway';
+        let selectedNode = null;
+        let scale = null;
+        let scalePoints = [];
+
+        // Initialize
+        window.onload = function() {
+            canvas = document.getElementById('floorPlanCanvas');
+            ctx = canvas.getContext('2d');
+            
+            resizeCanvas();
+            
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('click', handleCanvasClick);
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+            document.getElementById('jsonFileInput').addEventListener('change', handleJsonLoad);
+            
+            updateStats();
+            render();
+        };
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvasArea');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            render();
+        }
+
+        // Handle floor plan upload
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    floorPlanImage = img;
+                    floorPlanImageData = event.target.result;
+                    resizeCanvas();
+                    alert('✅ Floor plan uploaded! Now set the scale.');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Handle JSON file load
+        function handleJsonLoad(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    // Load nodes and edges
+                    nodes = data.nodes || [];
+                    edges = data.edges || [];
+                    scale = data.scale || null;
+                    
+                    // Load floor plan image if available
+                    if (data.floorPlanImage) {
+                        const img = new Image();
+                        img.onload = function() {
+                            floorPlanImage = img;
+                            floorPlanImageData = data.floorPlanImage;
+                            render();
+                        };
+                        img.src = data.floorPlanImage;
+                    }
+                    
+                    if (scale) {
+                        document.getElementById('scaleStatus').innerHTML = 
+                            `✅ Scale loaded: ${scale.toFixed(2)} pixels = 1 meter`;
+                    }
+                    
+                    updateNodesList();
+                    updateStats();
+                    render();
+                    
+                    alert('✅ Data loaded successfully!');
+                } catch (error) {
+                    alert('❌ Error loading file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Set scale
+        function setScale() {
+            if (scalePoints.length !== 2) {
+                alert('⚠️ Please click TWO points on the floor plan first!');
+                return;
+            }
+            
+            const knownDistance = parseFloat(document.getElementById('knownDistance').value);
+            if (!knownDistance || knownDistance <= 0) {
+                alert('⚠️ Please enter a valid distance');
+                return;
+            }
+            
+            const pixelDistance = Math.sqrt(
+                Math.pow(scalePoints[1].x - scalePoints[0].x, 2) +
+                Math.pow(scalePoints[1].y - scalePoints[0].y, 2)
+            );
+            
+            scale = pixelDistance / knownDistance;
+            
+            document.getElementById('scaleStatus').innerHTML = 
+                `✅ Scale set! ${scale.toFixed(2)} pixels = 1 meter`;
+            
+            scalePoints = [];
+            render();
+        }
+
+        // Mode switching
+        function setMode(newMode) {
+            mode = newMode;
+            selectedNode = null;
+            
+            // Update buttons
+            document.querySelectorAll('.mode-buttons button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (newMode === 'hallway' || newMode === 'room' || newMode === 'landmark') {
+                document.getElementById(newMode + 'ModeBtn').classList.add('active');
+                document.getElementById('nodeSection').style.display = 'block';
+                document.getElementById('edgeSection').style.display = 'none';
+                document.getElementById('deleteEdgeSection').style.display = 'none';
+                
+                // Auto-set the type dropdown
+                document.getElementById('nodeType').value = newMode;
+            } else if (newMode === 'edge') {
+                document.getElementById('edgeModeBtn').classList.add('active');
+                document.getElementById('nodeSection').style.display = 'none';
+                document.getElementById('edgeSection').style.display = 'block';
+                document.getElementById('deleteEdgeSection').style.display = 'none';
+                document.getElementById('connectionStatus').innerHTML = 'Click first location...';
+            } else if (newMode === 'deleteEdge') {
+                document.getElementById('deleteEdgeModeBtn').classList.add('active');
+                document.getElementById('nodeSection').style.display = 'none';
+                document.getElementById('edgeSection').style.display = 'none';
+                document.getElementById('deleteEdgeSection').style.display = 'block';
+                document.getElementById('deleteEdgeStatus').innerHTML = 'Hover over and click a link to delete it...';
+            }
+            
+            render();
+        }
+
+        // Handle canvas clicks
+        function handleCanvasClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Setting scale - need 2 points
+            if (scale === null) {
+                scalePoints.push({x, y});
+                render();
+                if (scalePoints.length === 2) {
+                    alert('✅ Two points marked! Now enter the actual distance and click "Set Scale"');
+                }
+                return;
+            }
+            
+            // Node mode - add new node
+            if (mode === 'hallway' || mode === 'room' || mode === 'landmark') {
+                const name = document.getElementById('nodeName').value.trim();
+                if (!name) {
+                    alert('⚠️ Please enter a name first!');
+                    return;
+                }
+                
+                const type = document.getElementById('nodeType').value;
+                const floor = parseInt(document.getElementById('nodeFloor').value);
+                
+                const newNode = {
+                    id: 'n' + Date.now(),
+                    name: name,
+                    type: type,
+                    floor: floor,
+                    x: x,
+                    y: y
+                };
+                
+                nodes.push(newNode);
+                document.getElementById('nodeName').value = '';
+                
+                updateNodesList();
+                updateStats();
+                render();
+            }
+            
+            // Edge mode - connect nodes
+            if (mode === 'edge') {
+                const clickedNode = findNodeAt(x, y);
+                
+                if (clickedNode) {
+                    if (!selectedNode) {
+                        selectedNode = clickedNode;
+                        document.getElementById('connectionStatus').innerHTML = 
+                            `Selected: <strong>${selectedNode.name}</strong> (${selectedNode.type})<br>Click second location...`;
+                        render();
+                    } else {
+                        if (selectedNode.id !== clickedNode.id) {
+                            // Check if connection already exists
+                            const exists = edges.some(e => 
+                                (e.from === selectedNode.id && e.to === clickedNode.id) ||
+                                (e.to === selectedNode.id && e.from === clickedNode.id)
+                            );
+                            
+                            if (exists) {
+                                alert('⚠️ These locations are already connected!');
+                            } else {
+                                const pixelDistance = Math.sqrt(
+                                    Math.pow(clickedNode.x - selectedNode.x, 2) +
+                                    Math.pow(clickedNode.y - selectedNode.y, 2)
+                                );
+                                const meterDistance = Math.round(pixelDistance / scale);
+                                
+                                const newEdge = {
+                                    id: 'e' + Date.now(),
+                                    from: selectedNode.id,
+                                    to: clickedNode.id,
+                                    distance: meterDistance
+                                };
+                                
+                                edges.push(newEdge);
+                                alert(`✅ Connected!\n${selectedNode.name} ↔ ${clickedNode.name}\nDistance: ${meterDistance}m`);
+                                updateStats();
+                            }
+                        }
+                        selectedNode = null;
+                        document.getElementById('connectionStatus').innerHTML = 'Click first location...';
+                        render();
+                    }
+                }
+            }
+            
+            // Delete edge mode - remove connections
+            if (mode === 'deleteEdge') {
+                const clickedEdge = findEdgeAt(x, y);
+                
+                if (clickedEdge) {
+                    const fromNode = nodes.find(n => n.id === clickedEdge.from);
+                    const toNode = nodes.find(n => n.id === clickedEdge.to);
+                    
+                    if (confirm(`Delete connection between "${fromNode.name}" and "${toNode.name}"?`)) {
+                        edges = edges.filter(e => e.id !== clickedEdge.id);
+                        alert(`✅ Connection deleted!`);
+                        updateStats();
+                        render();
+                    }
+                } else {
+                    document.getElementById('deleteEdgeStatus').innerHTML = '❌ No link found. Click on a link line to delete it.';
+                }
+            }
+        }
+
+        // Find node at coordinates
+        function findNodeAt(x, y) {
+            for (let node of nodes) {
+                const distance = Math.sqrt(Math.pow(node.x - x, 2) + Math.pow(node.y - y, 2));
+                if (distance < 15) {
+                    return node;
+                }
+            }
+            return null;
+        }
+
+        // Find edge at coordinates (click detection)
+        function findEdgeAt(x, y) {
+            const threshold = 10; // pixels away from line
+            
+            for (let edge of edges) {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                
+                if (fromNode && toNode) {
+                    // Calculate distance from point to line segment
+                    const distance = pointToLineDistance(x, y, fromNode.x, fromNode.y, toNode.x, toNode.y);
+                    
+                    if (distance < threshold) {
+                        return edge;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Calculate distance from point to line segment
+        function pointToLineDistance(px, py, x1, y1, x2, y2) {
+            const A = px - x1;
+            const B = py - y1;
+            const C = x2 - x1;
+            const D = y2 - y1;
+
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+
+            let param = -1;
+            if (lenSq !== 0) param = dot / lenSq;
+
+            let xx, yy;
+
+            if (param < 0) {
+                xx = x1;
+                yy = y1;
+            } else if (param > 1) {
+                xx = x2;
+                yy = y2;
+            } else {
+                xx = x1 + param * C;
+                yy = y1 + param * D;
+            }
+
+            const dx = px - xx;
+            const dy = py - yy;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // Render canvas
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw floor plan
+            if (floorPlanImage) {
+                const imgScale = Math.min(
+                    canvas.width / floorPlanImage.width,
+                    canvas.height / floorPlanImage.height
+                );
+                const width = floorPlanImage.width * imgScale;
+                const height = floorPlanImage.height * imgScale;
+                const x = (canvas.width - width) / 2;
+                const y = (canvas.height - height) / 2;
+                ctx.drawImage(floorPlanImage, x, y, width, height);
+            }
+            
+            // Draw scale points
+            scalePoints.forEach((point, i) => {
+                ctx.fillStyle = '#FF9800';
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText((i + 1).toString(), point.x - 4, point.y + 5);
+            });
+            
+            if (scalePoints.length === 2) {
+                ctx.strokeStyle = '#FF9800';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(scalePoints[0].x, scalePoints[0].y);
+                ctx.lineTo(scalePoints[1].x, scalePoints[1].y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // Draw edges with different styles
+            edges.forEach(edge => {
+                const fromNode = nodes.find(n => n.id === edge.from);
+                const toNode = nodes.find(n => n.id === edge.to);
+                
+                if (fromNode && toNode) {
+                    // Different line styles based on connection type
+                    const isHallwayConnection = 
+                        (fromNode.type === 'hallway' && toNode.type === 'hallway');
+                    
+                    if (isHallwayConnection) {
+                        ctx.strokeStyle = '#4CAF50';
+                        ctx.lineWidth = 6;
+                    } else {
+                        ctx.strokeStyle = '#2196F3';
+                        ctx.lineWidth = 3;
+                        ctx.setLineDash([8, 4]);
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(fromNode.x, fromNode.y);
+                    ctx.lineTo(toNode.x, toNode.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Distance label
+                    const midX = (fromNode.x + toNode.x) / 2;
+                    const midY = (fromNode.y + toNode.y) / 2;
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.strokeStyle = isHallwayConnection ? '#4CAF50' : '#2196F3';
+                    ctx.lineWidth = 2;
+                    
+                    const text = edge.distance + 'm';
+                    const textWidth = ctx.measureText(text).width;
+                    
+                    ctx.beginPath();
+                    ctx.roundRect(midX - textWidth/2 - 8, midY - 12, textWidth + 16, 24, 4);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = isHallwayConnection ? '#4CAF50' : '#2196F3';
+                    ctx.font = 'bold 13px Arial';
+                    ctx.fillText(text, midX - textWidth/2, midY + 5);
+                }
+            });
+            
+            // Draw nodes with different sizes
+            nodes.forEach(node => {
+                const colors = {
+                    'room': '#F44336',
+                    'landmark': '#FF9800',
+                    'hallway': '#4CAF50',
+                    'stairs': '#9C27B0',
+                    'elevator': '#673AB7'
+                };
+                
+                const sizes = {
+                    'hallway': 10,
+                    'room': 12,
+                    'landmark': 12,
+                    'stairs': 14,
+                    'elevator': 14
+                };
+                
+                const color = colors[node.type] || '#F44336';
+                const size = sizes[node.type] || 12;
+                
+                // Different shape for hallways
+                if (node.type === 'hallway') {
+                    ctx.fillStyle = color;
+                    const rectSize = size * 1.8;
+                    ctx.fillRect(node.x - rectSize/2, node.y - rectSize/2, rectSize, rectSize);
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(node.x - rectSize/2, node.y - rectSize/2, rectSize, rectSize);
+                } else {
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+                
+                // Highlight selected
+                if (selectedNode && selectedNode.id === node.id) {
+                    ctx.strokeStyle = '#FFEB3B';
+                    ctx.lineWidth = 5;
+                    if (node.type === 'hallway') {
+                        const rectSize = size * 1.8;
+                        ctx.strokeRect(node.x - rectSize/2, node.y - rectSize/2, rectSize, rectSize);
+                    } else {
+                        ctx.stroke();
+                    }
+                }
+                
+                // Label
+                ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                const textWidth = ctx.measureText(node.name).width;
+                ctx.fillRect(node.x + 18, node.y - 12, textWidth + 12, 24);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText(node.name, node.x + 24, node.y + 4);
+            });
+        }
+
+        // Update nodes list
+        function updateNodesList() {
+            let html = '';
+            nodes.forEach((node, index) => {
+                const icons = {
+                    'room': '🚪',
+                    'landmark': '📍',
+                    'hallway': '🚶',
+                    'stairs': '🪜',
+                    'elevator': '🛗'
+                };
+                html += `
+                    <div class="node-item">
+                        <div>
+                            ${icons[node.type]} <strong>${node.name}</strong><br>
+                            <small>${node.type} • Floor ${node.floor}</small>
+                        </div>
+                        <button class="delete-btn" onclick="deleteNode('${node.id}')">🗑️</button>
+                    </div>
+                `;
+            });
+            document.getElementById('nodesList').innerHTML = html || 
+                '<p style="text-align: center; color: #999; padding: 20px;">No locations added yet</p>';
+        }
+
+        // Delete node
+        function deleteNode(nodeId) {
+            if (!confirm('Delete this location and all its connections?')) return;
+            
+            nodes = nodes.filter(n => n.id !== nodeId);
+            edges = edges.filter(e => e.from !== nodeId && e.to !== nodeId);
+            
+            updateNodesList();
+            updateStats();
+            render();
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('nodeCount').textContent = nodes.length;
+            document.getElementById('edgeCount').textContent = edges.length;
+        }
+
+        // Save data as JSON file
+        function saveData() {
+            const data = {
+                nodes: nodes,
+                edges: edges,
+                scale: scale,
+                floorPlanImage: floorPlanImageData,
+                exportDate: new Date().toISOString()
+            };
+            
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'navigation_manual.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ File downloaded successfully!');
+        }
+
+        // Clear everything
+        function clearAll() {
+            if (!confirm('⚠️ This will delete ALL locations and connections. Are you sure?')) return;
+            
+            nodes = [];
+            edges = [];
+            scale = null;
+            scalePoints = [];
+            floorPlanImage = null;
+            floorPlanImageData = null;
+            selectedNode = null;
+            
+            document.getElementById('scaleStatus').innerHTML = '';
+            document.getElementById('nodeName').value = '';
+            document.getElementById('nodeFloor').value = '1';
+            document.getElementById('knownDistance').value = '10';
+            
+            updateNodesList();
+            updateStats();
+            render();
+            
+            alert('🗑️ Everything cleared!');
+        }
+    </script>
+</body>
+</html>  
