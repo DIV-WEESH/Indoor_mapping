@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Indoor Navigation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+        button.secondary {
+            background: #95a5a6;
+        }
+        button.secondary:hover {
+            background: #7f8c8d;
+        }
+        button.success {
+            background: #4CAF50;
+        }
+        button.success:hover {
+            background: #45a049;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .landmark-grid, .room-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .landmark-card, .room-card {
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .landmark-card:hover, .room-card:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+        .icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .route-step {
+            background: white;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .route-step:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+        .route-step.active {
+            background: #e3f2fd;
+            border: 2px solid #2196F3;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.2);
+        }
+        .route-step.completed {
+            background: #f1f8f4;
+            border-color: #4CAF50;
+            opacity: 0.85;
+        }
+        
+        .step-checkbox {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .route-step.active .step-checkbox {
+            border-color: #2196F3;
+        }
+        .route-step.completed .step-checkbox {
+            background: #4CAF50;
+            border-color: #4CAF50;
+        }
+        .step-checkbox-icon {
+            color: white;
+            font-size: 14px;
+            display: none;
+        }
+        .route-step.completed .step-checkbox-icon {
+            display: block;
+        }
+        
+        .step-number {
+            background: #e0e0e0;
+            color: #666;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .route-step.active .step-number {
+            background: #2196F3;
+            color: white;
+        }
+        .route-step.completed .step-number {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .direction-icon {
+            font-size: 20px;
+            min-width: 20px;
+        }
+        
+        .step-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .step-instruction {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .route-step.completed .step-instruction {
+            color: #4CAF50;
+        }
+        .step-details {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .route-step.completed .step-details {
+            text-decoration: line-through;
+        }
+        
+        .step-distance {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .route-step.active .step-distance {
+            background: #2196F3;
+        }
+        .route-step.completed .step-distance {
+            background: #4CAF50;
+        }
+        
+        .total-distance {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .progress-bar {
+            background: rgba(255,255,255,0.3);
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: white;
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        .progress-text {
+            font-size: 14px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+        
+        .route-header {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .route-header h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        .route-locations {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .arrival-celebration {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .arrival-celebration h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .celebration-icon {
+            font-size: 60px;
+            margin: 20px 0;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-state-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .tip-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Indoor Navigation</h1>
+        <p class="subtitle">Find your way around easily</p>
+        
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <div class="loading-spinner"></div>
+            <p style="text-align: center; color: #666; margin-top: 20px;">
+                Loading navigation data...
+            </p>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <div class="success-message">
+                <strong>✅ Navigation data loaded!</strong><br>
+                <span id="dataInfo"></span>
+            </div>
+            <h2>Where are you?</h2>
+            <button onclick="showLandmarks()">📍 Select Your Location</button>
+        </div>
+
+        <!-- Landmark Selection Screen -->
+        <div id="landmark-screen" class="screen">
+            <h2>Select Your Current Location</h2>
+            <div id="landmark-list" class="landmark-grid"></div>
+            <button class="secondary" onclick="showStart()">← Back</button>
+        </div>
+
+        <!-- Destination Screen -->
+        <div id="destination-screen" class="screen">
+            <h2>Where do you want to go?</h2>
+            <input type="text" id="search" placeholder="🔍 Search for a room..." oninput="filterRooms()">
+            <div id="room-list" class="room-grid"></div>
+            <button class="secondary" onclick="showLandmarks()">← Back</button>
+        </div>
+
+        <!-- Navigation Screen -->
+        <div id="navigation-screen" class="screen">
+            <h2>Your Route</h2>
+            <div id="route-info"></div>
+            <button class="secondary" onclick="showDestinations()">← Choose Another</button>
+            <button onclick="showStart()">🏠 Start Over</button>
+        </div>
+    </div>
+
+    <script>
+        let nodes = [];
+        let edges = [];
+        let currentLocation = null;
+        let currentStep = 0;
+        let routeSteps = [];
+        let destinationNode = null;
+
+        // Auto-load data on page load
+        window.onload = async function() {
+            await loadNavigationData();
+        };
+
+        async function loadNavigationData() {
+            try {
+                // Try to fetch navigation_data.json from the same directory
+                const response = await fetch('navigation_data.json');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Validate data structure
+                    if (data.nodes && data.edges) {
+                        nodes = data.nodes;
+                        edges = data.edges;
+                        
+                        document.getElementById('dataInfo').textContent = 
+                            `${nodes.length} locations, ${edges.length} connections loaded`;
+                        
+                        hideAllScreens();
+                        document.getElementById('start-screen').classList.add('active');
+                        return;
+                    }
+                }
+                
+                // If file fetch fails, try localStorage
+                throw new Error('File not found');
+                
+            } catch (error) {
+                console.log('Could not load from file, checking localStorage...', error);
+                
+                // Try localStorage as fallback
+                const savedNodes = localStorage.getItem('nodes');
+                const savedEdges = localStorage.getItem('edges');
+                
+                if (savedNodes && savedEdges) {
+                    nodes = JSON.parse(savedNodes);
+                    edges = JSON.parse(savedEdges);
+                    
+                    if (nodes.length > 0) {
+                        document.getElementById('dataInfo').textContent = 
+                            `${nodes.length} locations, ${edges.length} connections loaded from storage`;
+                        
+                        hideAllScreens();
+                        document.getElementById('start-screen').classList.add('active');
+                        return;
+                    }
+                }
+                
+                // No data found anywhere
+                hideAllScreens();
+                document.getElementById('loading-screen').innerHTML = `
+                    <div class="error-box">
+                        <strong>❌ No Navigation Data Found</strong><br>
+                        Please make sure navigation_data.json exists in the same directory,
+                        or analyze a floor plan first using the AI Floor Plan Analyzer.
+                    </div>
+                    <button onclick="location.reload()">🔄 Retry</button>
+                `;
+                document.getElementById('loading-screen').classList.add('active');
+            }
+        }
+
+        function showStart() {
+            if (nodes.length === 0) {
+                alert('⚠️ No navigation data loaded.');
+                return;
+            }
+            hideAllScreens();
+            document.getElementById('start-screen').classList.add('active');
+            currentLocation = null;
+            currentStep = 0;
+            routeSteps = [];
+        }
+
+        function showLandmarks() {
+            hideAllScreens();
+            document.getElementById('landmark-screen').classList.add('active');
+            renderLandmarks();
+        }
+
+        function showDestinations() {
+            if (!currentLocation) {
+                alert('Please select your current location first!');
+                showLandmarks();
+                return;
+            }
+            hideAllScreens();
+            document.getElementById('destination-screen').classList.add('active');
+            renderRooms();
+        }
+
+        function showNavigation(destination) {
+            hideAllScreens();
+            document.getElementById('navigation-screen').classList.add('active');
+            destinationNode = nodes.find(n => n.id === destination);
+            currentStep = 0;
+            calculateAndShowRoute(destination);
+        }
+
+        function hideAllScreens() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        }
+
+        function renderLandmarks() {
+            const container = document.getElementById('landmark-list');
+            const landmarks = nodes.filter(n => 
+                n.type === 'landmark' || n.type === 'stairs' || n.type === 'elevator'
+            );
+            
+            if (landmarks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-state-icon">📍</div>
+                        <p>No landmarks available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const icons = {
+                'landmark': '📍',
+                'stairs': '🪜',
+                'elevator': '🛗'
+            };
+
+            container.innerHTML = landmarks.map(node => `
+                <div class="landmark-card" onclick="selectLocation('${node.id}')">
+                    <div class="icon">${icons[node.type] || '📍'}</div>
+                    <strong>${node.name}</strong>
+                    <div style="font-size: 12px; margin-top: 5px; color: #666;">Floor ${node.floor}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderRooms(filter = '') {
+            const container = document.getElementById('room-list');
+            let rooms = nodes.filter(n => 
+                currentLocation.id !== n.id && 
+                n.type !== 'hallway'
+            );
+            
+            if (filter) {
+                rooms = rooms.filter(n => 
+                    n.name.toLowerCase().includes(filter.toLowerCase())
+                );
+            }
+
+            if (rooms.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-state-icon">🚪</div>
+                        <p>No rooms found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const icons = {
+                'room': '🚪',
+                'landmark': '📍',
+                'stairs': '🪜',
+                'elevator': '🛗'
+            };
+
+            container.innerHTML = rooms.map(node => `
+                <div class="room-card" onclick="showNavigation('${node.id}')">
+                    <div class="icon">${icons[node.type] || '🚪'}</div>
+                    <strong>${node.name}</strong>
+                    <div style="font-size: 12px; margin-top: 5px; color: #666;">Floor ${node.floor}</div>
+                </div>
+            `).join('');
+        }
+
+        function filterRooms() {
+            const filter = document.getElementById('search').value;
+            renderRooms(filter);
+        }
+
+        function selectLocation(nodeId) {
+            currentLocation = nodes.find(n => n.id === nodeId);
+            showDestinations();
+        }
+
+        function getDirection(from, to) {
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            const normalizedAngle = (angle + 360) % 360;
+            
+            if (normalizedAngle >= 315 || normalizedAngle < 45) {
+                return { text: 'Turn Right', icon: '→', detail: 'Head to your right' };
+            } else if (normalizedAngle >= 45 && normalizedAngle < 135) {
+                return { text: 'Turn around', icon: '↓', detail: 'Continue forward' };
+            } else if (normalizedAngle >= 135 && normalizedAngle < 225) {
+                return { text: 'Turn Left', icon: '←', detail: 'Head to your left' };
+            } else {
+                return { text: 'Move Forward', icon: '↑', detail: 'Head backward' };
+            }
+        }
+
+        function findShortestPath(startId, endId) {
+            const distances = {};
+            const previous = {};
+            const unvisited = new Set();
+
+            nodes.forEach(node => {
+                distances[node.id] = Infinity;
+                previous[node.id] = null;
+                unvisited.add(node.id);
+            });
+
+            distances[startId] = 0;
+
+            while (unvisited.size > 0) {
+                let currentId = null;
+                let minDist = Infinity;
+                
+                for (let id of unvisited) {
+                    if (distances[id] < minDist) {
+                        minDist = distances[id];
+                        currentId = id;
+                    }
+                }
+
+                if (currentId === null || distances[currentId] === Infinity) break;
+                if (currentId === endId) break;
+
+                unvisited.delete(currentId);
+
+                const neighbors = edges.filter(e => 
+                    e.from === currentId || e.to === currentId
+                );
+
+                neighbors.forEach(edge => {
+                    const neighborId = edge.from === currentId ? edge.to : edge.from;
+                    if (!unvisited.has(neighborId)) return;
+
+                    const alt = distances[currentId] + edge.distance;
+                    if (alt < distances[neighborId]) {
+                        distances[neighborId] = alt;
+                        previous[neighborId] = currentId;
+                    }
+                });
+            }
+
+            if (distances[endId] === Infinity) return null;
+
+            const path = [];
+            let current = endId;
+            while (current !== null) {
+                path.unshift(current);
+                current = previous[current];
+            }
+
+            return { path, distance: distances[endId] };
+        }
+
+        function findNearestLandmark(node) {
+            const connectedNodes = edges
+                .filter(e => e.from === node.id || e.to === node.id)
+                .map(e => {
+                    const otherId = e.from === node.id ? e.to : e.from;
+                    return nodes.find(n => n.id === otherId);
+                })
+                .filter(n => n && (n.type === 'room' || n.type === 'landmark'));
+            
+            if (connectedNodes.length > 0) {
+                const rooms = connectedNodes.filter(n => n.type === 'room');
+                if (rooms.length > 0) return rooms[0];
+                return connectedNodes[0];
+            }
+            
+            let nearest = null;
+            let minDistance = Infinity;
+            nodes.forEach(n => {
+                if ((n.type === 'room' || n.type === 'landmark') && n.id !== node.id) {
+                    const distance = Math.sqrt(
+                        Math.pow(n.x - node.x, 2) + Math.pow(n.y - node.y, 2)
+                    );
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearest = n;
+                    }
+                }
+            });
+            
+            return nearest;
+        }
+
+        function calculateAndShowRoute(destinationId) {
+            const result = findShortestPath(currentLocation.id, destinationId);
+            const container = document.getElementById('route-info');
+
+            if (!result) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <p>No route found between these locations</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const destination = nodes.find(n => n.id === destinationId);
+            
+            routeSteps = [];
+            for (let i = 0; i < result.path.length - 1; i++) {
+                const fromNode = nodes.find(n => n.id === result.path[i]);
+                const toNode = nodes.find(n => n.id === result.path[i + 1]);
+                const edge = edges.find(e => 
+                    (e.from === fromNode.id && e.to === toNode.id) ||
+                    (e.to === fromNode.id && e.from === toNode.id)
+                );
+
+                const direction = getDirection(fromNode, toNode);
+                const nearestLandmark = findNearestLandmark(toNode);
+                
+                routeSteps.push({
+                    from: fromNode,
+                    to: toNode,
+                    distance: edge.distance,
+                    direction: direction,
+                    nearestLandmark: nearestLandmark,
+                    completed: false
+                });
+            }
+
+            renderRoute(result.distance);
+        }
+
+        function renderRoute(totalDistance) {
+            const container = document.getElementById('route-info');
+            const progress = (currentStep / routeSteps.length) * 100;
+            
+            let html = `
+                <div class="total-distance">
+                    📏 ${totalDistance}m Total Distance
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="progress-text">
+                        ${currentStep} of ${routeSteps.length} completed
+                    </div>
+                </div>
+                
+                <div class="route-header">
+                    <h3>Navigation Steps</h3>
+                    <div class="route-locations">
+                        ${currentLocation.name} → ${destinationNode.name}
+                    </div>
+                </div>
+            `;
+
+            if (currentStep >= routeSteps.length) {
+                html += `
+                    <div class="arrival-celebration">
+                        <div class="celebration-icon">🎉</div>
+                        <h2>You've Arrived!</h2>
+                        <p style="font-size: 18px; margin-top: 10px;">
+                            Welcome to ${destinationNode.name}
+                        </p>
+                    </div>
+                `;
+                html += `
+                    <button class="success" onclick="showDestinations()">Navigate Somewhere Else</button>
+                `;
+            } else {
+                html += `<div class="tip-box">💡 Tap any step to mark it as completed</div>`;
+                
+                const icons = {
+                    'room': '🚪',
+                    'landmark': '📍',
+                    'hallway': '🚶',
+                    'stairs': '🪜',
+                    'elevator': '🛗'
+                };
+
+                routeSteps.forEach((step, index) => {
+                    const isActive = index === currentStep;
+                    const isCompleted = index < currentStep;
+
+                    html += `
+                        <div class="route-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+                             onclick="completeStep(${index})">
+                            <div class="step-checkbox">
+                                <span class="step-checkbox-icon">✓</span>
+                            </div>
+                            <div class="step-number">${index + 1}</div>
+                            <span class="direction-icon">${step.direction.icon}</span>
+                            <div class="step-content">
+                                <div class="step-instruction">${step.direction.text}</div>
+                                <div class="step-details">
+                                    to ${icons[step.to.type]} ${step.to.name}${step.to.floor !== step.from.floor ? ` (Floor ${step.to.floor})` : ''}
+                                    ${step.nearestLandmark ? `<br>📍 You'll be near ${icons[step.nearestLandmark.type]} <strong>${step.nearestLandmark.name}</strong>` : ''}
+                                </div>
+                            </div>
+                            <span class="step-distance">${step.distance}m</span>
+                        </div>
+                    `;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        function completeStep(stepIndex) {
+            if (stepIndex === currentStep && currentStep < routeSteps.length) {
+                routeSteps[currentStep].completed = true;
+                currentStep++;
+                
+                const totalDistance = routeSteps.reduce((sum, step) => sum + step.distance, 0);
+                renderRoute(totalDistance);
+                
+                setTimeout(() => {
+                    const activeStep = document.querySelector('.route-step.active');
+                    if (activeStep) {
+                        activeStep.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            }
+        }
+    </script>
+</body>
+</html>
